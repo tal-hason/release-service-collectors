@@ -47,19 +47,6 @@ def get_release_namespace(data_release):
     return data_release['metadata']['namespace']
 
 
-def get_namespace_from_release(release_json_file):
-
-    data_release = read_json(release_json_file)
-
-    if not data_release:
-        log(f"Empty release file {release_json_file}")
-        exit(0)
-
-    ns = get_release_namespace(data_release)
-    log(f"Namespace extracted from file {release_json_file}: {ns}")
-    return ns
-
-
 def search_issues():
     parser = argparse.ArgumentParser(description='Get all issues from Jira query')
     parser.add_argument(
@@ -74,10 +61,11 @@ def search_issues():
     parser.add_argument('-p', '--previousRelease', help='Path to previous release file. Not used, supported to align the interface.', required=False)
     args = vars(parser.parse_args())
 
-    namespace = get_namespace_from_release(args['release'])
+    release_data = read_json(args['release'])
+    namespace = get_release_namespace(release_data)
     credentials = get_secret_data(namespace, args['secretName'])
 
-    issues =  query_jira(args['url'], args['query'], credentials)
+    issues = query_jira(args['url'], args['query'], credentials)
 
     # source needs to not have the https:// prefix
     return create_json_record(issues, args['url'].replace("https://",""))
